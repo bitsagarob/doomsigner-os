@@ -4,7 +4,7 @@
 > describes upstream's images. Two things do not carry over:
 >
 > - **The reproducible-build hash check does not apply here.** This fork builds the
->   signing application from [bitsagarob/seedsigner](https://github.com/bitsagarob/seedsigner),
+>   signing application from [bitsagarob/doomsigner](https://github.com/bitsagarob/doomsigner),
 >   which adds BIP-352 silent payments, so the image will never match a hash
 >   published on SeedSigner's releases page. That is expected, not a failure.
 > - **Clone this repo, not upstream's**, and the app-repo flags in the examples

@@ -17,7 +17,7 @@ either.
 ## What is new here
 
 The signing application is built from
-**[our own fork](https://github.com/bitsagarob/seedsigner)** (branch `dev`), not
+**[our own fork](https://github.com/bitsagarob/doomsigner)** (branch `dev`), not
 from upstream.
 
 ### BIP-352 silent payments

@@ -15,7 +15,7 @@ cur_dir=$(pwd)
 # dev. A branch cut from tag SeSi-0.8.7+ShSi-B11 failed CI for exactly that reason.
 #
 # Override with --app-repo / --app-branch to build stock instead.
-seedsigner_app_repo="https://github.com/bitsagarob/seedsigner.git"
+seedsigner_app_repo="https://github.com/bitsagarob/doomsigner.git"
 seedsigner_app_repo_branch="dev"
 
 help()
