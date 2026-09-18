@@ -38,7 +38,7 @@ jobs:
       - name: Check out the wallet
         uses: actions/checkout@v4
         with:
-          repository: bitsagarob/seedsigner
+          repository: bitsagarob/doomsigner
           ref: ${{ inputs.app_ref || 'dev' }}
           path: app
 

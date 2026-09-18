@@ -27,7 +27,7 @@ on:
       app_repo:
         description: 'SeedSigner app repository URL'
         required: false
-        default: 'https://github.com/bitsagarob/seedsigner'
+        default: 'https://github.com/bitsagarob/doomsigner'
       app_branch:
         description: 'SeedSigner app branch'
         required: false
@@ -112,7 +112,7 @@ jobs:
             ${{ matrix.board_flag }}
             --smartcard
             --dev
-            --app-repo=${{ inputs.app_repo || 'https://github.com/bitsagarob/seedsigner' }}
+            --app-repo=${{ inputs.app_repo || 'https://github.com/bitsagarob/doomsigner' }}
             --app-branch=${{ inputs.seedsigner_release_tag || inputs.app_branch || 'dev' }}
         run: docker compose up --force-recreate --build --exit-code-from build-images
 

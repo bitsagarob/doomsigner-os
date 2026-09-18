@@ -27,7 +27,7 @@ on:
       app_repo:
         description: 'SeedSigner app repository URL'
         required: false
-        default: 'https://github.com/bitsagarob/seedsigner'
+        default: 'https://github.com/bitsagarob/doomsigner'
       app_branch:
         description: 'SeedSigner app branch'
         required: false
