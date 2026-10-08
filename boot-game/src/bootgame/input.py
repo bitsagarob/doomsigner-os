@@ -40,4 +40,11 @@ class ButtonReader:
 
 
     def presses(self):
-        return self.edges.presses(lambda channel: self.buttons.check_for_low(key=channel))
+        # EdgeDetector needs the raw level. Since the app fork's 2026-08-09 debounce rework,
+        # check_for_low() fires again every other poll while a key is held, so one held KEY2
+        # reads as two presses and resets the unlock. 0.8.7 has no is_pressed() and its
+        # check_for_low() is still a plain level read.
+        is_pressed = getattr(self.buttons, "is_pressed", None)
+        if is_pressed is None:
+            return self.edges.presses(lambda channel: self.buttons.check_for_low(key=channel))
+        return self.edges.presses(is_pressed)

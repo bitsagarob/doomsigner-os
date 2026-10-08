@@ -45,6 +45,7 @@ controller and a gpiochip that pretend to be hardware.
 | `shoot_bip353_screens.py` | renders the BIP-353 payment-name screens in every status |
 | `shoot_one_screen.py` | the smallest possible probe: one stock screen through the real driver |
 | `shoot_one_visit.py` | the happy path: a coordinator-armed spend that signs in one visit |
+| `shoot_boot_game.py` | the boot game: Snake through the real driver, a wrong-order control, then KEY1, KEY2, KEY3 into the wallet handoff |
 
 ## Why the app needs no changes
 
