@@ -288,12 +288,19 @@ check_target_rootfs() {
     failed=1
   fi
 
+  # start.sh falls back to the wallet when the game is absent, so a missing game boots fine and
+  # nothing notices. Every CI image up to 2026-10-08 shipped without it for exactly that reason.
+  if [ ! -d "${target}/usr/local/bootgame/bootgame" ]; then
+    echo "ERROR: the boot game is not in the target rootfs; the device would skip it silently"
+    failed=1
+  fi
+
   if [ "${failed}" != "0" ]; then
     echo "Refusing to publish an image that is missing what it is supposed to carry."
     exit 1
   fi
 
-  echo "check_target_rootfs: pydnssec_prover, libsecp256k1 and libcrypto are all present"
+  echo "check_target_rootfs: pydnssec_prover, libsecp256k1, libcrypto and the boot game are all present"
 }
 
 build_image() {
@@ -330,6 +337,10 @@ build_image() {
   # matters: write_version_json needs the .git/ and tools/ that the other removes.
   write_version_json
   delete_unnecessary_files
+
+  # The staged copy is gitignored, so a fresh checkout has no game until this runs.
+  # docker-compose mounts ./boot-game beside ./opt.
+  sh "${cur_dir}/../boot-game/stage.sh" || exit
 
   # Setup external tree
   #make BR2_EXTERNAL="../${config_dir}/" O="${build_dir}" -C ./buildroot/ #2> /dev/null > /dev/null
