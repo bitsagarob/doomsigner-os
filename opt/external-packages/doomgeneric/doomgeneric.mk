@@ -11,6 +11,8 @@ DOOMGENERIC_VERSION = dcb7a8dbc7a16ce3dda29382ac9aae9d77d21284
 DOOMGENERIC_SITE = $(call github,ozkl,doomgeneric,$(DOOMGENERIC_VERSION))
 DOOMGENERIC_LICENSE = GPL-2.0
 DOOMGENERIC_LICENSE_FILES = LICENSE
+# The panel config generator below runs on the host's Python.
+DOOMGENERIC_DEPENDENCIES = host-python3
 
 # Where our platform layer and the panel config generator live.
 # BR2_EXTERNAL_RPI_SEEDSIGNER_PATH is <repo>/opt/pi0, and docker-compose

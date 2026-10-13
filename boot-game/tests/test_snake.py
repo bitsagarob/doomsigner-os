@@ -183,6 +183,28 @@ def test_it_renders_on_a_non_square_canvas():
 # --- the play loop ---------------------------------------------------------
 
 
+def test_the_board_fills_a_320x240_panel(monkeypatch):
+    from PIL import Image, ImageDraw
+
+    from bootgame.games import snake
+    from bootgame.games.snake import SNAKE_BODY
+    from bootgame.unlock import UnlockSequence
+    from conftest import FakeReader, FakeRenderer
+
+    monkeypatch.setattr(snake.time, "sleep", lambda seconds: None)
+    renderer = FakeRenderer()
+    renderer.canvas = Image.new("RGB", (320, 240))
+    renderer.draw = ImageDraw.Draw(renderer.canvas)
+    renderer.canvas_width = 320
+
+    with pytest.raises(StopIteration):
+        snake.play(renderer, FakeReader([[]]), UnlockSequence())
+
+    # One tick in, the tail is in column 1 of the middle row. A 12x12 board
+    # centred on this panel would leave that pixel in the black bar.
+    assert renderer.canvas.getpixel((30, 6 * 20 + 10)) == SNAKE_BODY
+
+
 def test_the_unlock_sequence_hands_off_mid_game(renderer, monkeypatch):
     from bootgame.games import snake
     from bootgame.unlock import UnlockSequence

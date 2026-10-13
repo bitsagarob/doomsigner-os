@@ -29,4 +29,4 @@ def launch_external(game) -> None:
     rather than returning to the menu, which for a toy is the right way round.
     """
     logger.info("launching %s", game.name)
-    os.execv(game.binary, [game.binary])
+    os.execv(game.binary, [game.binary, *game.args])

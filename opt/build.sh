@@ -210,6 +210,15 @@ EOF
   fi
 }
 
+write_default_settings() {
+  # Doomsigner targets the 320x240 SeedSigner Plus panel. The app defaults to the
+  # 240x240 Waveshare hat, which on the bigger panel draws into one corner, boot game
+  # included. The app reads ./settings.json as its defaults when the card holds no saved
+  # settings, and start.sh runs everything from /opt/src. A 240x240 hat still works:
+  # hold the joystick up for 5 s on the home screen.
+  echo '{"display_config": "st7789_320x240"}' > "${rootfs_overlay}/opt/src/settings.json"
+}
+
 delete_unnecessary_files() {
   # Delete unnecessary files to save space. Runs independently of download_app_repo so
   # that --skip-repo builds (CI, which populates rootfs-overlay/opt itself) are trimmed
@@ -295,12 +304,28 @@ check_target_rootfs() {
     failed=1
   fi
 
+  if ! grep -q st7789_320x240 "${target}/opt/src/settings.json" 2>/dev/null; then
+    echo "ERROR: /opt/src/settings.json does not default to the 320x240 panel"
+    failed=1
+  fi
+
+  # Without its WAD, DOOM exits at once and start.sh runs the wallet, so a missing WAD
+  # boots fine and nobody notices.
+  if grep -q '^BR2_PACKAGE_DOOMGENERIC=y' "${1}/.config"; then
+    for file in usr/local/games/doom usr/local/games/freedoom1.wad; do
+      if [ ! -f "${target}/${file}" ]; then
+        echo "ERROR: DOOM is enabled but ${file} is not in the target rootfs"
+        failed=1
+      fi
+    done
+  fi
+
   if [ "${failed}" != "0" ]; then
     echo "Refusing to publish an image that is missing what it is supposed to carry."
     exit 1
   fi
 
-  echo "check_target_rootfs: pydnssec_prover, libsecp256k1, libcrypto and the boot game are all present"
+  echo "check_target_rootfs: pydnssec_prover, libsecp256k1, libcrypto, the boot game, the panel default and any DOOM files are all present"
 }
 
 build_image() {
@@ -337,10 +362,16 @@ build_image() {
   # matters: write_version_json needs the .git/ and tools/ that the other removes.
   write_version_json
   delete_unnecessary_files
+  write_default_settings
 
   # The staged copy is gitignored, so a fresh checkout has no game until this runs.
   # docker-compose mounts ./boot-game beside ./opt.
   sh "${cur_dir}/../boot-game/stage.sh" || exit
+
+  # The WAD is fetched rather than committed, and only a board that builds DOOM needs it.
+  if grep -q '^BR2_PACKAGE_DOOMGENERIC=y' "${config_dir}/configs/${config_name}_defconfig"; then
+    sh "${cur_dir}/../boot-game/doom/fetch-wad.sh" || exit
+  fi
 
   # Setup external tree
   #make BR2_EXTERNAL="../${config_dir}/" O="${build_dir}" -C ./buildroot/ #2> /dev/null > /dev/null

@@ -92,6 +92,17 @@ def test_both_checkouts_agree(tmp_path):
     assert defines(upstream) == defines(fork)
 
 
+@needs_fork
+def test_the_320x240_madctl_carries_the_driver_s_colour_order(tmp_path):
+    # st7789_mpy.py takes 0x60 from its rotation table, then rotation() ORs in
+    # the BGR bit because __post_init__ sets color_order = BGR. Its pixels are
+    # plain RGB565, the same as DOOM's, so only this bit tells the two apart on
+    # the panel: without it DOOM shows red and blue swapped next to the wallet.
+    _, header = generate(SEEDSIGNER_FORK, tmp_path, profile="RPI_40", display="st7789_320x240")
+
+    assert "#define SS_PANEL_MADCTL 0x68" in header
+
+
 @needs_app
 def test_it_refuses_a_display_nobody_has_verified(tmp_path):
     result, _ = generate(SEEDSIGNER_APP, tmp_path, display="ili9486_480x320")

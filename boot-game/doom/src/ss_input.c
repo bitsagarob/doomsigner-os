@@ -8,7 +8,7 @@
 
 #include "doomkeys.h"
 #include "ss_gpio.h"
-#include "ss_panel_config.h"
+#include <ss_panel_config.h>
 
 typedef struct {
     int pin;
@@ -55,14 +55,17 @@ int ss_input_init(void)
         return init_stdin();
     }
 
-    /* ss_display_init already opened gpiomem; opening twice is harmless. */
+    /* ss_display_init has usually opened the chip already; that is fine. */
     if (ss_gpio_open() < 0) {
-        fprintf(stderr, "doom: cannot open /dev/gpiomem for buttons\n");
+        fprintf(stderr, "doom: cannot open /dev/gpiochip0 for buttons\n");
         return -1;
     }
 
     for (size_t i = 0; i < BUTTON_COUNT; i++) {
-        ss_gpio_input_pullup(BUTTONS[i].pin);
+        if (ss_gpio_input_pullup(BUTTONS[i].pin) < 0) {
+            fprintf(stderr, "doom: cannot claim button line %d\n", BUTTONS[i].pin);
+            return -1;
+        }
     }
 
     return 0;

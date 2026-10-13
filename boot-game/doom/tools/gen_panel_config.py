@@ -96,6 +96,13 @@ def parse_rotation(driver: Path, width: int, height: int):
     table = source[source.index(f"_DISPLAY_{height}x{width} = ("):]
     table = table[: table.index("\n)")]
 
+    # rotation() ORs the colour order bit into the table's value. Missing it
+    # swaps red and blue against the wallet, on the same panel.
+    order = set(re.findall(r"^\s*color_order\s*=\s*(RGB|BGR)\s*$", source, re.M))
+    if len(order) != 1:
+        raise SystemExit(f"cannot tell which colour order {driver} uses")
+    colour_bit = 0x08 if order == {"BGR"} else 0x00
+
     for madctl, w, h, xstart, ystart, swap in re.findall(
         r"\(\s*(0x[0-9a-fA-F]+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+),\s*(True|False)\s*\)", table
     ):
@@ -104,7 +111,7 @@ def parse_rotation(driver: Path, width: int, height: int):
                 raise SystemExit(f"rotation needs offsets {xstart},{ystart}; not handled yet")
             if swap == "True":
                 raise SystemExit("rotation needs a byte swap; not handled yet")
-            return int(madctl, 16)
+            return int(madctl, 16) | colour_bit
 
     raise SystemExit(f"no {width}x{height} rotation found in {driver}")
 

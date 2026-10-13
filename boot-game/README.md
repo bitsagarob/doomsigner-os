@@ -59,10 +59,11 @@ shows no chooser at all and behaves exactly as it did before a second game
 existed. That is the whole feature toggle: it follows what was built into the
 image, with nothing to configure.
 
-DOOM is registered at `/usr/local/games/doom` and is **not built yet**. What
-remains is a buildroot external package wrapping `doomgeneric`, a `DG_DrawFrame`
-that pushes to the ST7789 over SPI, a `DG_GetKey` that also watches for the
-unlock sequence, and a Freedoom WAD so the licensing stays clean.
+DOOM is registered at `/usr/local/games/doom`, and the `pi0-smartcard` image
+builds it (`BR2_PACKAGE_DOOMGENERIC`, see `doom/`). With DOOM installed the
+chooser appears and opens on DOOM. It is launched with `-iwad`, because
+doomgeneric looks for its WAD only in the working directory, which is
+`/opt/src` by then.
 
 ## Tests
 

@@ -1,94 +1,101 @@
 #include "ss_gpio.h"
 
 #include <fcntl.h>
+#include <linux/gpio.h>
 #include <stdint.h>
-#include <stddef.h>
-#include <sys/mman.h>
-#include <time.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
-/* BCM2835 GPIO register offsets, in 32 bit words. */
-#define GPFSEL0   0
-#define GPSET0    7
-#define GPCLR0   10
-#define GPLEV0   13
-#define GPPUD    37
-#define GPPUDCLK0 38
+/*
+ * The line offsets on the Pi's gpiochip0 are the BCM numbers, which is what
+ * SeedSigner's io_config.json names for every pin.
+ */
+#define SS_GPIO_CHIP "/dev/gpiochip0"
+#define SS_GPIO_LINES 64
 
-#define GPIO_MAP_LEN 4096
-
-static volatile uint32_t *gpio = NULL;
-static int gpio_fd = -1;
-
-static void short_delay(void)
-{
-    struct timespec ts = { 0, 1000000 }; /* 1ms, generous for the pull latch */
-    nanosleep(&ts, NULL);
-}
+static int chip_fd = -1;
+static int line_fd[SS_GPIO_LINES];
 
 int ss_gpio_open(void)
 {
-    gpio_fd = open("/dev/gpiomem", O_RDWR | O_SYNC);
-    if (gpio_fd < 0) {
+    /* The display and the buttons both open it. */
+    if (chip_fd >= 0) {
+        return 0;
+    }
+
+    chip_fd = open(SS_GPIO_CHIP, O_RDWR | O_CLOEXEC);
+    if (chip_fd < 0) {
         return -1;
     }
 
-    void *mapped = mmap(NULL, GPIO_MAP_LEN, PROT_READ | PROT_WRITE, MAP_SHARED, gpio_fd, 0);
-    if (mapped == MAP_FAILED) {
-        close(gpio_fd);
-        gpio_fd = -1;
-        return -1;
+    for (int i = 0; i < SS_GPIO_LINES; i++) {
+        line_fd[i] = -1;
     }
-
-    gpio = (volatile uint32_t *)mapped;
     return 0;
 }
 
 void ss_gpio_close(void)
 {
-    if (gpio) {
-        munmap((void *)gpio, GPIO_MAP_LEN);
-        gpio = NULL;
+    if (chip_fd < 0) {
+        return;
     }
-    if (gpio_fd >= 0) {
-        close(gpio_fd);
-        gpio_fd = -1;
+
+    for (int i = 0; i < SS_GPIO_LINES; i++) {
+        if (line_fd[i] >= 0) {
+            close(line_fd[i]);
+            line_fd[i] = -1;
+        }
     }
+    close(chip_fd);
+    chip_fd = -1;
 }
 
-static void set_function(int pin, uint32_t function)
+static int request_line(int pin, uint64_t flags)
 {
-    const int reg = GPFSEL0 + pin / 10;
-    const int shift = (pin % 10) * 3;
+    if (chip_fd < 0 || pin < 0 || pin >= SS_GPIO_LINES) {
+        return -1;
+    }
 
-    gpio[reg] = (gpio[reg] & ~(0x7u << shift)) | (function << shift);
+    struct gpio_v2_line_request request;
+    memset(&request, 0, sizeof(request));
+    request.offsets[0] = (uint32_t)pin;
+    request.num_lines = 1;
+    request.config.flags = flags;
+    strncpy(request.consumer, "doom", sizeof(request.consumer) - 1);
+
+    if (ioctl(chip_fd, GPIO_V2_GET_LINE_IOCTL, &request) < 0) {
+        return -1;
+    }
+
+    /* The kernel opens the line fd close-on-exec, so the wallet gets the pins. */
+    line_fd[pin] = request.fd;
+    return 0;
 }
 
-void ss_gpio_output(int pin)
+int ss_gpio_output(int pin)
 {
-    set_function(pin, 0x1);
+    return request_line(pin, GPIO_V2_LINE_FLAG_OUTPUT);
 }
 
-void ss_gpio_input_pullup(int pin)
+int ss_gpio_input_pullup(int pin)
 {
-    set_function(pin, 0x0);
-
-    /* BCM2835 pull configuration: set the mode, clock it into the pin, clear. */
-    gpio[GPPUD] = 0x2; /* pull up */
-    short_delay();
-    gpio[GPPUDCLK0 + pin / 32] = 1u << (pin % 32);
-    short_delay();
-    gpio[GPPUD] = 0;
-    gpio[GPPUDCLK0 + pin / 32] = 0;
+    return request_line(pin, GPIO_V2_LINE_FLAG_INPUT | GPIO_V2_LINE_FLAG_BIAS_PULL_UP);
 }
 
 void ss_gpio_write(int pin, int high)
 {
-    const int reg = (high ? GPSET0 : GPCLR0) + pin / 32;
-    gpio[reg] = 1u << (pin % 32);
+    struct gpio_v2_line_values values = { .bits = high ? 1 : 0, .mask = 1 };
+    ioctl(line_fd[pin], GPIO_V2_LINE_SET_VALUES_IOCTL, &values);
 }
 
 int ss_gpio_read(int pin)
 {
-    return (gpio[GPLEV0 + pin / 32] >> (pin % 32)) & 1u;
+    struct gpio_v2_line_values values = { .bits = 0, .mask = 1 };
+
+    /* Buttons idle high, so a line that cannot be read reads as not pressed. */
+    if (ioctl(line_fd[pin], GPIO_V2_LINE_GET_VALUES_IOCTL, &values) < 0) {
+        return 1;
+    }
+    return (int)(values.bits & 1);
 }

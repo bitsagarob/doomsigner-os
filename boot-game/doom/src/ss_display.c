@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "ss_gpio.h"
-#include "ss_panel_config.h"
+#include <ss_panel_config.h>
 #include "ss_video.h"
 
 #define SPI_SPEED_HZ 40000000
@@ -102,13 +102,15 @@ static int set_window(void)
 static int init_spi(void)
 {
     if (ss_gpio_open() < 0) {
-        fprintf(stderr, "doom: cannot open /dev/gpiomem\n");
+        fprintf(stderr, "doom: cannot open /dev/gpiochip0\n");
         return -1;
     }
 
-    ss_gpio_output(SS_PIN_DC);
-    ss_gpio_output(SS_PIN_RST);
-    ss_gpio_output(SS_PIN_BL);
+    if (ss_gpio_output(SS_PIN_DC) < 0 || ss_gpio_output(SS_PIN_RST) < 0 ||
+        ss_gpio_output(SS_PIN_BL) < 0) {
+        fprintf(stderr, "doom: cannot claim the display control lines\n");
+        return -1;
+    }
     ss_gpio_write(SS_PIN_BL, 1);
 
     spi_fd = open(SS_SPI_DEVICE, O_RDWR);

@@ -35,6 +35,10 @@ FOOD: Colour = (255, 159, 10)
 # Leaves a hairline gap between cells so the body reads as segments.
 CELL_INSET = 1
 
+# The board takes as many cells as the panel holds: 12x12 on the 240x240 hat,
+# 16x12 on the 320x240 one. A fixed 12x12 left black bars down both sides there.
+CELL_PIXELS = 20
+
 TICK_SECONDS = 0.18
 POLL_SECONDS = 0.01
 GAME_OVER_PAUSE_SECONDS = 1.5
@@ -166,7 +170,10 @@ def _draw_cell(draw, cell: Cell, cell_size: int, origin_x: int, origin_y: int, c
 
 def play(renderer, reader, unlock) -> None:
     """Play until the unlock sequence is entered. Does not return."""
-    game = SnakeGame()
+    game = SnakeGame(
+        grid_width=renderer.canvas_width // CELL_PIXELS,
+        grid_height=renderer.canvas_height // CELL_PIXELS,
+    )
     next_tick = time.monotonic()
 
     while True:

@@ -12,11 +12,14 @@ the package needs to know it exists.
 import logging
 import os
 from dataclasses import dataclass
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 DOOM_BINARY = "/usr/local/games/doom"
+# doomgeneric looks for an IWAD only in its working directory, which is the
+# wallet's /opt/src by then, so the path has to be passed.
+DOOM_WAD = "/usr/local/games/freedoom1.wad"
 
 
 @dataclass(frozen=True)
@@ -26,6 +29,7 @@ class Game:
     name: str
     module: Optional[str] = None
     binary: Optional[str] = None
+    args: Tuple[str, ...] = ()
 
     def __post_init__(self):
         if bool(self.module) == bool(self.binary):
@@ -38,9 +42,10 @@ class Game:
 
 
 SNAKE = Game("SNAKE", module="bootgame.games.snake")
-DOOM = Game("DOOM", binary=DOOM_BINARY)
+DOOM = Game("DOOM", binary=DOOM_BINARY, args=("-iwad", DOOM_WAD))
 
-ALL_GAMES = [SNAKE, DOOM]
+# The chooser opens on the first entry, so an image with DOOM offers DOOM.
+ALL_GAMES = [DOOM, SNAKE]
 
 
 def available_games(exists: Callable[[str], bool] = os.path.exists) -> List[Game]:

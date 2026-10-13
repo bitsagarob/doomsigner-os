@@ -61,6 +61,7 @@ class Panel:
         self.cmd = code
         self.args = []
         if code == CMD_RAMWR:
+            self.clamp_window()
             self.cursor = (self.x0, self.y0)
             self.pending = bytearray()
             self.frame_bytes = 0
@@ -75,6 +76,19 @@ class Panel:
             self.inverted = False
         elif code == CMD_SWRESET:
             self.__init__(self.width, self.height)
+
+    def clamp_window(self):
+        """
+        An end address past the controller's RAM is ignored (ST7789V datasheet,
+        CASET and RASET notes), so the last real column or row ends the window.
+        With MADCTL's row/column exchange the RAM is 320 wide and 240 tall.
+        SeedSigner's st7789_mpy.py ends its 320x240 window at 320 and 240, past
+        both, and draws upright on real panels. The same off-by-one at 240x240
+        is inside the RAM and skews, which upstream's display_driver.py records.
+        """
+        columns, rows = (320, 240) if self.madctl & 0x20 else (240, 320)
+        self.x1 = min(self.x1, columns - 1)
+        self.y1 = min(self.y1, rows - 1)
 
     def finish_args(self):
         if self.cmd == CMD_CASET and len(self.args) >= 4:
@@ -150,6 +164,9 @@ class Panel:
 # doing that would rotate every correct frame and hide the real fault. A wrong
 # value is caught by comparing it, which is what EXPECTED_MADCTL is for.
 EXPECTED_MADCTL = 0x70
+# The 320x240 SeedSigner Plus panel, as st7789_mpy.py rotates it: 0x60 from its
+# rotation table, plus the BGR bit its rotation() adds.
+EXPECTED_MADCTL_320x240 = 0x68
 
 
 def apply_madctl(panel):
@@ -179,8 +196,8 @@ def apply_madctl(panel):
     panel.pixels = out
 
 
-def replay(stream):
-    panel = Panel()
+def replay(stream, width=240, height=240):
+    panel = Panel(width, height)
     events = []
     offset = 0
     while offset + HEADER.size <= len(stream):
@@ -236,17 +253,25 @@ MAX_SPLIT_FRAMES = 500
 
 
 def main():
-    if len(sys.argv) not in (3, 4):
-        print("usage: decode_st7789.py capture.bin out.png [--split]", file=sys.stderr)
+    args = sys.argv[1:]
+    width, height = 240, 240
+    for arg in list(args):
+        if arg.startswith("--panel="):
+            width, height = (int(v) for v in arg[len("--panel="):].split("x"))
+            args.remove(arg)
+
+    if len(args) not in (2, 3):
+        print("usage: decode_st7789.py capture.bin out.png [--split] [--panel=320x240]",
+              file=sys.stderr)
         return 2
 
-    with open(sys.argv[1], "rb") as handle:
+    with open(args[0], "rb") as handle:
         stream = handle.read()
 
-    panel, events = replay(stream)
+    panel, events = replay(stream, width, height)
 
-    if len(sys.argv) == 4 and sys.argv[3] == "--split":
-        base = sys.argv[2][:-4] if sys.argv[2].endswith(".png") else sys.argv[2]
+    if len(args) == 3 and args[2] == "--split":
+        base = args[1][:-4] if args[1].endswith(".png") else args[1]
         for index, frame in enumerate(panel.frames[:MAX_SPLIT_FRAMES], 1):
             write_png(f"{base}-{index:02d}.png", panel.width, panel.height, frame)
         if len(panel.frames) > MAX_SPLIT_FRAMES:
@@ -256,20 +281,21 @@ def main():
         else:
             print(f"wrote {len(panel.frames)} frame(s) as {base}-NN.png")
     else:
-        write_png(sys.argv[2], panel.width, panel.height, panel.pixels)
+        write_png(args[1], panel.width, panel.height, panel.pixels)
 
     print(f"captured {len(stream)} bytes, {panel.writes} pixel bytes written")
     print(f"MADCTL 0x{panel.madctl:02X}  COLMOD 0x{panel.colmod:02X}  "
           f"inverted={panel.inverted}")
-    if panel.madctl != EXPECTED_MADCTL:
+    expected = EXPECTED_MADCTL_320x240 if (width, height) == (320, 240) else EXPECTED_MADCTL
+    if panel.madctl != expected:
         print(f"  WARNING: MADCTL is 0x{panel.madctl:02X}, expected "
-              f"0x{EXPECTED_MADCTL:02X} — the screen would be rotated or mirrored")
+              f"0x{expected:02X} — the screen would be rotated or mirrored")
     if not panel.inverted:
         print("  WARNING: inversion was never enabled — this panel shows a "
               "negative image without it")
     for event in events[:8]:
         print(f"  {event}")
-    print(f"wrote {sys.argv[2]}")
+    print(f"wrote {args[1]}")
     return 0
 
 

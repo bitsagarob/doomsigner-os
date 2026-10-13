@@ -194,6 +194,26 @@ def check_window_wraps_to_top():
           pixel_at(panel, 0, 0) == (0, 0, 255), f"{pixel_at(panel, 0, 0)}")
 
 
+def check_window_end_past_the_ram():
+    """An end address past the controller's RAM ends the window at the RAM's edge."""
+    words = [0x0000] * (320 * 240)
+    words[320] = 0xF800  # first pixel of the second row
+    stream = (command(dec.CMD_MADCTL, 0x60) + window(0, 0, 320, 240)
+              + command(dec.CMD_RAMWR) + pixels(words))
+    panel, _ = dec.replay(stream, 320, 240)
+    check("st7789_mpy.py's 320x240 window, which ends at 320, draws upright",
+          pixel_at(panel, 0, 1) == (255, 0, 0), f"{pixel_at(panel, 0, 1)}")
+
+    # The same off-by-one inside the RAM is a real skew, so it must stay one.
+    words = [0x0000] * (241 * 240)
+    words[241] = 0xF800
+    stream = (command(dec.CMD_MADCTL, 0x70) + window(0, 0, 240, 239)
+              + command(dec.CMD_RAMWR) + pixels(words))
+    panel, _ = dec.replay(stream)
+    check("an end address inside the RAM is honoured, skew and all",
+          pixel_at(panel, 0, 1) == (255, 0, 0), f"{pixel_at(panel, 0, 1)}")
+
+
 def check_frame_split():
     """Two screens in one capture come back as two frames, in order."""
     first = window(0, 0, 239, 239) + command(dec.CMD_RAMWR) + pixels([0xF800] * (240 * 240))
@@ -339,6 +359,7 @@ CHECKS = [
     ("colour byte order", check_byte_order),
     ("the addressing window", check_window_addressing),
     ("window overrun", check_window_wraps_to_top),
+    ("an end address past the RAM", check_window_end_past_the_ram),
     ("frame splitting", check_frame_split),
     ("gpio events", check_gpio_records),
     ("init values", check_init_values_recorded),
