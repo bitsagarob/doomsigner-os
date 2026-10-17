@@ -14,7 +14,7 @@ unchanged. One seam, three backends:
 Because the seam is pyscard rather than the wallet's own card calls, the whole
 of pysatochip and the whole of SeedSigner run unmodified and unaware. That is
 the difference between this and the Python test double in
-`seedsigner-sp/tests/test_musig2_card.py`, which replaces pysatochip's
+`doomsigner/tests/test_musig2_card.py`, which replaces pysatochip's
 CardConnector and so tests the wallet's protocol without testing pysatochip or
 the applet.
 

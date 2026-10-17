@@ -1,6 +1,6 @@
 """Demo 2 on the real applet: a silent payment send, MuSig2, a card per signer."""
 
-# Run with PYTHONPATH=<this dir>:<seedsigner-sp/src> and JCARDSIM_JAR, APPLET_SRC,
+# Run with PYTHONPATH=<this dir>:<doomsigner/src> and JCARDSIM_JAR, APPLET_SRC,
 # JAVA_HOME set. See README.md.
 import json, os, sys
 from embit import bip32, bip39
@@ -30,7 +30,7 @@ from seedsigner.models.settings_definition import SettingsConstants
 # psbt fixture.
 FIXTURE = os.environ.get(
     "MUSIG2_FIXTURE",
-    "/home/rob/apps/seedsigner-sp/tests/data/musig2_psbts.json")
+    "/home/rob/apps/doomsigner/tests/data/musig2_psbts.json")
 from test_musig2_sp import silent_send, role_of, single_holder_scripts
 
 data = json.load(open(FIXTURE))

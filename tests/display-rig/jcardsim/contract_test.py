@@ -27,7 +27,7 @@ once more nonces are outstanding than the card tracks. Those are worth adding;
 they are not covered today.
 
     JAVA_HOME=... JCARDSIM_JAR=... APPLET_SRC=... \
-    PYTHONPATH=<this dir>:<seedsigner-sp/src>:<seedsigner-sp/tests> \
+    PYTHONPATH=<this dir>:<doomsigner/src>:<doomsigner/tests> \
     python3 contract_test.py
 """
 import json
@@ -52,7 +52,7 @@ from seedsigner.helpers import musig2_psbt as mp
 
 FIXTURE = os.environ.get(
     "MUSIG2_FIXTURE",
-    "/home/rob/apps/seedsigner-sp/tests/data/musig2_psbts.json")
+    "/home/rob/apps/doomsigner/tests/data/musig2_psbts.json")
 
 failures = []
 

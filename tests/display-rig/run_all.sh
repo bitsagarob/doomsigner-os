@@ -2,7 +2,7 @@
 # One command for a full Virtual HAT pass: every probe and every shooter,
 # against whatever app source you point it at.
 #
-#   ./run_all.sh /home/rob/apps/seedsigner-sp/src        # dev
+#   ./run_all.sh /home/rob/apps/doomsigner/src        # dev
 #   ./run_all.sh /home/rob/apps/_scratch/ss-card/src     # a branch worktree
 #
 # Two layers, and a pass says which of them it ran:
@@ -26,7 +26,7 @@
 # stale copy cannot survive to be tested by mistake. Change a probe here.
 set -uo pipefail
 
-APP_SRC="${1:-/home/rob/apps/seedsigner-sp/src}"
+APP_SRC="${1:-/home/rob/apps/doomsigner/src}"
 UML="${UML_ROOT:-/home/rob/apps/_scratch/uml}"
 RIG="$(cd "$(dirname "$0")" && pwd)"
 STAMP="$(date -u +%Y%m%d-%H%M)"

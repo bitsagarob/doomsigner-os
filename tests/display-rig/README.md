@@ -46,6 +46,7 @@ controller and a gpiochip that pretend to be hardware.
 | `shoot_one_screen.py` | the smallest possible probe: one stock screen through the real driver |
 | `shoot_one_visit.py` | the happy path: a coordinator-armed spend that signs in one visit |
 | `shoot_boot_game.py` | the boot game: Snake through the real driver, a wrong-order control, then KEY1, KEY2, KEY3 into the wallet handoff |
+| `doom/` | the DOOM boot chain by hand, as run on 2026-10-13: the UML init scripts (copied from `_scratch/uml/rootfs/`, where `run.sh` expects them), `fingers.py` (chooser, DOOM, wrong order, KEY1, KEY2, KEY3, wallet), the Pi Zero `sitecustomize.py` shim and the `gpioprobe.c` GPIO probe. The scripts mount a stage from `_scratch/uml/doom-stage/`: build DOOM static from `boot-game/doom/src` with `-I<dir with the generated ss_panel_config.h>` first |
 
 ## Why the app needs no changes
 
@@ -144,7 +145,7 @@ cheaply, so that stays here.
 
 ## Before tagging a release
 
-    ./release_gate.sh /home/rob/apps/seedsigner-sp/src v0.13
+    ./release_gate.sh /home/rob/apps/doomsigner/src dev
 
 `run_all.sh` answers *did a pass happen*. That is a different question from *is
 this good enough to ship*, and it cannot answer the second: it prints

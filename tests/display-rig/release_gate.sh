@@ -23,7 +23,7 @@
 set -uo pipefail
 
 RIG="$(cd "$(dirname "$0")" && pwd)"
-APP_SRC="${1:-/home/rob/apps/seedsigner-sp/src}"
+APP_SRC="${1:-/home/rob/apps/doomsigner/src}"
 WANT_REF="${2:-}"
 UML="${UML_ROOT:-/home/rob/apps/_scratch/uml}"
 

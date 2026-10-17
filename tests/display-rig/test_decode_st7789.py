@@ -270,7 +270,7 @@ def check_init_values_recorded():
 
 def check_madctl_expectation_is_the_driver_s():
     """The value the decoder warns about is the one the app's driver sets."""
-    app = os.environ.get("APP_SRC", "/home/rob/apps/seedsigner-sp/src")
+    app = os.environ.get("APP_SRC", "/home/rob/apps/doomsigner/src")
     driver = os.path.join(app, "seedsigner", "hardware", "displays", "ST7789.py")
     if not os.path.exists(driver):
         print(f"  skip  MADCTL against the driver ({driver} not present)")

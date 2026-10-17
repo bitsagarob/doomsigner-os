@@ -1,6 +1,6 @@
 """Demo 1 on the real applet: the nonce vault, both rounds, then a replay."""
 
-# Run with PYTHONPATH=<this dir>:<seedsigner-sp/src> and JCARDSIM_JAR, APPLET_SRC,
+# Run with PYTHONPATH=<this dir>:<doomsigner/src> and JCARDSIM_JAR, APPLET_SRC,
 # JAVA_HOME set. See README.md.
 import json, os, sys
 from embit import bip32, bip39
@@ -29,7 +29,7 @@ from seedsigner.helpers import musig2_card as mc, musig2_psbt as mp
 # psbt fixture.
 FIXTURE = os.environ.get(
     "MUSIG2_FIXTURE",
-    "/home/rob/apps/seedsigner-sp/tests/data/musig2_psbts.json")
+    "/home/rob/apps/doomsigner/tests/data/musig2_psbts.json")
 from test_musig2_psbt import without_other_nonces, role_of, core_nonce
 
 data = json.load(open(FIXTURE))

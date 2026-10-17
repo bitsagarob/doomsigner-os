@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 RIG = os.path.dirname(os.path.abspath(__file__))
-APP = os.environ.get("APP_SRC", "/home/rob/apps/seedsigner-sp/src")
+APP = os.environ.get("APP_SRC", "/home/rob/apps/doomsigner/src")
 
 # (what is broken, which file, find, replace). A file named APP/... is in the
 # app source tree rather than the rig.
