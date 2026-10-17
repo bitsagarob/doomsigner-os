@@ -117,13 +117,13 @@ not a design.**
 | | Boots into | To the wallet | Back to the game |
 | --- | --- | --- | --- |
 | **Browser simulator** | **DOOM**, always | **Five taps** on the top side button (KEY1) | **Five more taps** |
-| **Real device** | **Snake** | **KEY1, KEY2, KEY3** in order | Not possible. Reboot |
+| **Real device** | A chooser: **DOOM** and Snake | **KEY1, KEY2, KEY3** in order | Not possible. Reboot |
 
-**DOOM does not ship on hardware yet.** The buildroot package and the C port both
-exist, but `BR2_PACKAGE_DOOMGENERIC` is enabled in no defconfig and only `opt/pi0`
-offers it, which is not among the boards CI builds. So the device finds one game,
-skips the chooser and boots Snake. The browser DOOM is a separate WebAssembly
-build that never runs the Python boot game.
+**DOOM ships on the release image only.** `BR2_PACKAGE_DOOMGENERIC` is enabled in
+`opt/pi0-smartcard`, the board `build-release.yml` builds and v0.2 ships. Every other
+board, including the five developer images `build.yml` builds, finds one game, skips
+the chooser and boots Snake. The browser DOOM is a separate WebAssembly build that
+never runs the Python boot game.
 
 Every device handoff is `execv`, so the game is **replaced** rather than
 backgrounded and no game code is in memory while the wallet holds keys. Hence no
